@@ -1,0 +1,26 @@
+# --- Build Outputs ---
+build/
+bin/
+obj/
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+
+# --- STM32CubeMX / IDE Junk ---
+.mxproject
+STM32CubeIDE/
+*~
+*.swp
+
+# --- VS Code Metadata ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# --- macOS System Files ---
+.DS_Store

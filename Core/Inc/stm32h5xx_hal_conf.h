@@ -466,6 +466,10 @@
   #define assert_param(expr) ((void)0U)
 #endif /* USE_FULL_ASSERT */
 
+/* --- MANUAL FIX FOR MISSING INTRINSICS --- */
+#include "cmsis_compiler.h"
+/* ----------------------------------------- */
+
 #ifdef __cplusplus
 }
 #endif

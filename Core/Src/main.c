@@ -24,6 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include "cmsis_compiler.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -131,9 +133,6 @@ int main(void)
   uint32_t end_tiled = DWT->CYCCNT;
   uint32_t tiled_cycles = end_tiled - start_tiled;
   
-  // 4. Calculate Speedup
-  float speedup = (float)standard_cycles / (float)tiled_cycles;
-
   // Inside your main loop or test function
 char buffer[100];
 // Format: DATA,N,Standard,Tiled

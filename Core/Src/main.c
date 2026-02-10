@@ -20,9 +20,10 @@
 #include "main.h"
 #include <stdint.h>
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,7 +113,6 @@ int main(void)
   MX_ICACHE_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  /* USER CODE BEGIN 2 */
   DWT_Init(); // Start the timer hardware
 
   // 1. Initialize Matrices with data (don't multiply zeros!)
@@ -133,7 +133,12 @@ int main(void)
   
   // 4. Calculate Speedup
   float speedup = (float)standard_cycles / (float)tiled_cycles;
-  /* USER CODE END 2 */
+
+  // Inside your main loop or test function
+char buffer[100];
+// Format: DATA,N,Standard,Tiled
+sprintf(buffer, "DATA,%u,%u,%u\r\n", MATRIX_SIZE, standard_cycles, tiled_cycles);
+HAL_UART_Transmit(&huart3, (uint8_t*)buffer, strlen(buffer), 100);
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -348,7 +353,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-#include <string.h>
+void Matrix_Init(float* mat, uint32_t N) {
+    for (uint32_t i = 0; i < N * N; i++) {
+        // Fill with simple fractional numbers to keep the FPU busy
+        mat[i] = (float)i * 0.123f; 
+    }
+}
+
 
 //Standard matrix multiplication with no tiling used as control for cache analysis
 #define T 8

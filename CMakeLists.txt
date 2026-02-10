@@ -1,3 +1,23 @@
+# --- MANDATORY MAC CROSS-COMPILE OVERRIDE ---
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
+
+# Force skip the compiler checks that trigger the -arch arm64 error
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
+set(CMAKE_ASM_COMPILER_WORKS 1)
+
+# Prevent Mac SDK injection
+set(CMAKE_OSX_SYSROOT "")
+set(CMAKE_OSX_ARCHITECTURES "")
+# --------------------------------------------
+
+cmake_minimum_required(VERSION 3.22)
+
+# ... (rest of your file continues below)
+
+
 cmake_minimum_required(VERSION 3.22)
 
 #

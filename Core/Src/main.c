@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdint.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -31,7 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define MATRIX_SIZE 32
+#define T 8
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,6 +51,13 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 
+float matA[MATRIX_SIZE * MATRIX_SIZE];
+float matB[MATRIX_SIZE * MATRIX_SIZE];
+float matC[MATRIX_SIZE * MATRIX_SIZE];
+
+uint32_t standard_cycles = 0;
+uint32_t tiled_cycles = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,8 +66,12 @@ static void MX_GPIO_Init(void);
 static void MX_DCACHE1_Init(void);
 static void MX_ICACHE_Init(void);
 static void MX_USART3_UART_Init(void);
-/* USER CODE BEGIN PFP */
 
+/* USER CODE BEGIN PFP */
+void DWT_Init(void);
+void Matrix_Init(float* mat, uint32_t N);
+void Matrix_Multiply_Standard(float* mat1, float* mat2, float* resultant, uint32_t N);
+void Matrix_Multiply_tiling(float* a, float* b, float* c, uint32_t N);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -99,7 +112,28 @@ int main(void)
   MX_ICACHE_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2 */
+  DWT_Init(); // Start the timer hardware
 
+  // 1. Initialize Matrices with data (don't multiply zeros!)
+  Matrix_Init(matA, MATRIX_SIZE);
+  Matrix_Init(matB, MATRIX_SIZE);
+  
+  // 2. Test the Standard Version
+  uint32_t start_std = DWT->CYCCNT;
+  Matrix_Multiply_Standard(matA, matB, matC, MATRIX_SIZE);
+  uint32_t end_std = DWT->CYCCNT;
+  uint32_t standard_cycles = end_std - start_std;
+
+  // 3. Test the Tiled Version
+  uint32_t start_tiled = DWT->CYCCNT;
+  Matrix_Multiply_tiling(matA, matB, matC, MATRIX_SIZE);
+  uint32_t end_tiled = DWT->CYCCNT;
+  uint32_t tiled_cycles = end_tiled - start_tiled;
+  
+  // 4. Calculate Speedup
+  float speedup = (float)standard_cycles / (float)tiled_cycles;
+  /* USER CODE END 2 */
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -314,7 +348,65 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+#include <string.h>
 
+//Standard matrix multiplication with no tiling used as control for cache analysis
+#define T 8
+void Matrix_Multiply_Standard(float* mat1, float* mat2, float* resultant, uint32_t N){
+  if(!mat1 || !mat2 || !resultant){
+    return; //return if null pointer
+  }
+
+  memset(resultant, 0, N * N * sizeof(float)); // Clear C once at the very start
+ 
+
+  for(uint32_t rows = 0; rows < N; rows++){ //mat1 rows
+    for(uint32_t cols = 0; cols < N; cols++){  //mat2 cols
+      float sum = 0.0f;
+      for(uint32_t k = 0; k < N; k++){ //in pointer addition moves column multiplication move down row
+          sum += mat1[rows * N + k] * mat2[k * N + cols];
+      }
+      resultant[rows * N + cols] = sum;
+    }
+  }
+}
+
+//matrix using tiling method
+void Matrix_Multiply_tiling(float* a, float* b, float* c, uint32_t N){
+  if(!a || !b || !c){
+    return;
+  }
+
+  memset(c, 0, N * N * sizeof(float)); // Clear C once at the very start
+
+  for(uint32_t i_tile = 0; i_tile <  N; i_tile+=T){
+    for(uint32_t j_tile = 0; j_tile < N; j_tile+=T){
+      for(uint32_t k_tile = 0; k_tile < N; k_tile+=T){
+
+        for(uint32_t i = i_tile; i < i_tile+T; i++){
+          for(uint32_t j = j_tile; j < j_tile+T; j++){
+            float sum = 0.0f;
+            for(uint32_t k = k_tile; k < k_tile+T; k++){
+              sum += a[i * N + k] * b[k * N + j];
+            }
+            c[i * N + j] += sum;
+          }
+        }
+      }
+    }
+  }
+}
+
+void DWT_Init(void) {
+    // 1. Enable the Trace system
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    
+    // 2. Reset the cycle counter
+    DWT->CYCCNT = 0;
+    
+    // 3. Enable the cycle counter
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
 /* USER CODE END 4 */
 
 /**

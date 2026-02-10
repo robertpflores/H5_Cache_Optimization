@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug STM32H5",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/H5_Cache_Benchmark.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "stutil",
+            "device": "STM32H533RE", 
+            "gdbPath": "/opt/ST/STM32CubeCLT_1.20.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb",
+            "interface": "swd",
+            "svdFile": "${workspaceFolder}/STM32H533.svd"
+        }
+    ]
+}
